@@ -47,7 +47,7 @@ inline unsigned int read_pin(enum pru_pin pin)
 
 inline void toggle_pin(enum pru_pin pin)
 {
-    __R30 ^ pin;
+    __R30 ^= pin;
 }
 
 inline void assert_pin(enum pru_pin pin)

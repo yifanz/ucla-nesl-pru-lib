@@ -1,4 +1,5 @@
 #include "nesl_pru_gpio.h"
+#include "nesl_pru_wait.h"
 
 unsigned int i;                  // the counter in the time delay
 unsigned int delay = 588260;     // the delay (manually determined)
@@ -16,10 +17,8 @@ int main()
 
    // while the button r31.3 has not been pressed, keep looping
    while(!read_pin(P9_28)){
-      assert_pin(P9_27);
-      for(i=0; i<delay; i++) {}     // sleep for the delay
-      deassert_pin(P9_27);
-      for(i=0; i<delay; i++) {}     // sleep for the delay
+      toggle_pin(P9_27);
+      WAIT_MS(500);
    }
 
    // Exiting the application - send the interrupt
