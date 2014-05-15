@@ -7,12 +7,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <prussdrv.h>
 #include <pruss_intc_mapping.h>
 
 int main (void)
 {
     int n, ret;
+    uint8_t *shared_mem;
 
     if(getuid()!=0){
         printf("You must run this program as root. Exiting.\n");
@@ -33,6 +35,14 @@ int main (void)
     /* Map PRU's INTC */
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
+    // Map PRU's shared memory into user-space
+    if (prussdrv_map_prumem(PRUSS0_SHARED_DATARAM, (void **) &shared_mem)) {
+        printf("map shared memory failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(shared_mem, 0, 0x2000);
+
     /* Load the memory data file */
     prussdrv_load_datafile(PRU_NUM, "./data.bin");
 
@@ -43,6 +53,9 @@ int main (void)
     n = prussdrv_pru_wait_event (PRU_EVTOUT_0);  // This assumes the PRU generates an interrupt
     // connected to event out 0 immediately before halting
     printf("PRU program completed, event number %d.\n", n);
+    printf("cycles %lu\n", *((uint32_t*) shared_mem));
+    printf("cycles %lu\n", *((uint32_t*) (shared_mem+4)));
+    printf("cycles %lu\n", *((uint32_t*) (shared_mem+8)));
 
     /* Disable PRU and close memory mappings */
     prussdrv_pru_disable(PRU_NUM);

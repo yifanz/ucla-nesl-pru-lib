@@ -5,7 +5,7 @@
 
 enum pru_pin
 {
-#if PRU == 0
+#if PRU_NUM == 0
     // PRU0
     P8_11 = 1 << 15, // output only
     P8_12 = 1 << 14, // output only
