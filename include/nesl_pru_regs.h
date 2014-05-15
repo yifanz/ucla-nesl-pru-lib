@@ -11,4 +11,6 @@ static uint32_t *CYCLE_CNT_REG = (uint32_t*) 0x2200C;
 #define ENABLE_TICKS() *CTRL_REG |= 1 << 3; *CYCLE_CNT_REG = 0
 #define TICKS (*CYCLE_CNT_REG)
 
+#define TRIG_INTC(int_num) (__R31 = (1<<5) | int_num)
+
 #endif

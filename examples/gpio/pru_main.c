@@ -17,6 +17,6 @@ int main()
     deassert_pin(P9_27);
 
     // Exiting the application - send the interrupt
-    __R31 = 35; // PRUEVENT_0 on PRU0_R31_VEC_VALID
+    TRIG_INTC(3); // PRUEVENT_0 on PRU0_R31_VEC_VALID
     __halt(); // halt the PRU
 }

@@ -16,6 +16,6 @@ int main()
     *(shared_mem+2) = TICKS;
 
     // Exiting the application - send the interrupt
-    __R31 = 35; // PRUEVENT_0 on PRU0_R31_VEC_VALID
+    TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
     __halt(); // halt the PRU
 }
