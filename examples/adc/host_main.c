@@ -1,8 +1,14 @@
-/** Program to generate a simple PWM signal using the BBB PRU-ICSS
- * Written by Derek Molloy for the book "Exploring BeagleBone: Tools and
- * Techniques for Building with Embedded Linux" by John Wiley & Sons, 2014
- * ISBN 9781118935125. Please see the file README.md in the repository root
- * directory for copyright and GNU GPLv3 license information.            */
+/*
+ * Copyright (c) Regents of the University of California, 2017. All rights reserved.
+ * See LICENSE and ATTRIB in the repository root.
+ */
+
+/*
+ * Based on code from Derek Molloy for the book "Exploring BeagleBone:
+ * Tools and Techniques for Building with Embedded Linux" by John Wiley & Sons,
+ * 2014 ISBN 9781118935125. Please see the file ATTRIB in the repository root
+ * directory for copyright and GNU GPLv3 license information.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

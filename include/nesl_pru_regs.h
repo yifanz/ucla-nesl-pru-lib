@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) Regents of the University of California, 2017. All rights reserved.
+ * See LICENSE and ATTRIB in the repository root.
+ */
+
+/*
+ * Based on code from the Beaglebone PRU IO project.
+ * https://github.com/outer-space-sounds/beaglebone-pruio
+ * Please see the file ATTRIB in the repository root
+ * directory for copyright and GNU GPLv3 license information.
+ */
+
 #ifndef NESL_PRU_REGS_H
 #define NESL_PRU_REGS_H
 

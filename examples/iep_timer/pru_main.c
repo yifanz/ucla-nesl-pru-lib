@@ -1,3 +1,15 @@
+/*
+ * Copyright (c) Regents of the University of California, 2017. All rights reserved.
+ * See LICENSE and ATTRIB in the repository root.
+ */
+
+/*
+ * Based on code from Derek Molloy for the book "Exploring BeagleBone:
+ * Tools and Techniques for Building with Embedded Linux" by John Wiley & Sons,
+ * 2014 ISBN 9781118935125. Please see the file ATTRIB in the repository root
+ * directory for copyright and GNU GPLv3 license information.
+ */
+
 #include "nesl_pru_intc.h"
 #include "nesl_pru_iep.h"
 #include "nesl_pru_wait.h"

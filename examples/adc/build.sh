@@ -1,5 +1,17 @@
 #!/bin/bash
 
+#
+#Copyright (c) Regents of the University of California, 2017. All rights reserved.
+#See LICENSE and ATTRIB in the repository root.
+#
+#
+#
+#Based on code from Derek Molloy for the book "Exploring BeagleBone:
+#Tools and Techniques for Building with Embedded Linux" by John Wiley & Sons,
+#2014 ISBN 9781118935125. Please see the file ATTRIB in the repository root
+#directory for copyright and GNU GPLv3 license information.
+#
+
 PRU_NUM=0; # which PRU 0 or 1
 PRU_SDK=/root/pru_2.0.0B2
 PRU_SRC="pru_main.c"

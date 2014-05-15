@@ -1,10 +1,15 @@
-/* Device Tree Overlay for enabling the pins that are used in Chapter 13
-* This overlay is based on the BB-PRU-01 overlay
-* Written by Derek Molloy for the book "Exploring BeagleBone: Tools and 
-* Techniques for Building with Embedded Linux" by John Wiley & Sons, 2014
-* ISBN 9781118935125. Please see the file README.md in the repository root 
-* directory for copyright and GNU GPLv3 license information.
-*/
+/*
+ * Copyright (c) Regents of the University of California, 2017. All rights reserved.
+ * See LICENSE and ATTRIB in the repository root.
+ */
+
+/*
+ * Based on Device Tree Overlay for enabling the pins that are used in
+ * Chapter 13 of the book "Exploring BeagleBone: Tools and
+ * Techniques for Building with Embedded Linux" by Derek Molloy, 2014
+ * ISBN 9781118935125. Please see the file ATTRIB in the repository root
+ * directory for copyright and GNU GPLv3 license information.
+ */
 /dts-v1/;
 /plugin/;
 
