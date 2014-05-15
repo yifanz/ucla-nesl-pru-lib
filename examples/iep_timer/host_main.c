@@ -14,8 +14,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <pthread.h>
 #include <prussdrv.h>
 #include <pruss_intc_mapping.h>
+#include "nesl_host_rbuffer.h"
+
+volatile int stop = 0;
+
+void *threadFunction(void *value){
+    do {
+        prussdrv_pru_wait_event(PRU_EVTOUT_0);
+        prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
+        stop = 1;
+        //printf("Done\n");
+    } while (1);
+}
 
 int main (void)
 {
@@ -26,6 +39,8 @@ int main (void)
         printf("You must run this program as root. Exiting.\n");
         exit(EXIT_FAILURE);
     }
+
+    pthread_t thread;
 
     /* Initialize structure used by prussdrv_pruintc_intc   */
     /* PRUSS_INTC_INITDATA is found in pruss_intc_mapping.h */
@@ -56,12 +71,18 @@ int main (void)
     prussdrv_exec_program (PRU_NUM, "./text.bin");
 
     /* Wait for event completion from PRU */
-    n = prussdrv_pru_wait_event (PRU_EVTOUT_0);  // This assumes the PRU generates an interrupt
-    // connected to event out 0 immediately before halting
-    printf("PRU program completed, event number %d.\n", n);
-    printf("cycles %lu\n", *((uint32_t*) shared_mem));
-    printf("cycles %lu\n", *((uint32_t*) (shared_mem+4)));
-    printf("cycles %lu\n", *((uint32_t*) (shared_mem+8)));
+    if (pthread_create(&thread, NULL, &threadFunction, NULL)){
+        printf("Failed to create thread!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int status = 0;
+    do {
+        uint32_t data = rbuf_read_int32((struct rbuffer *)shared_mem, &status);
+        if (!status) {
+            printf("count: %lu\n", data);
+        }
+    } while(!stop);
 
     /* Disable PRU and close memory mappings */
     prussdrv_pru_disable(PRU_NUM);

@@ -51,4 +51,4 @@ $PRU_SDK/bin/hexpru ../bin.cmd $PRU_TARGET
 popd
 
 echo "Compiling the host application"
-gcc -DPRU_NUM=$PRU_NUM $HOST_SRC -o $GEN/$HOST_TARGET -lpthread -lprussdrv
+gcc -I../../include -DPRU_NUM=$PRU_NUM $HOST_SRC -o $GEN/$HOST_TARGET -lpthread -lprussdrv
