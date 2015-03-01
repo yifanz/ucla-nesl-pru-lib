@@ -28,32 +28,32 @@
 
 #define PTP_PIN_SETFUNC    _IOW(PTP_CLK_MAGIC, 7, struct ptp_pin_desc)
 
-struct ptp_pin_desc {
-    /*
-     * Hardware specific human readable pin name. This field is
-     * set by the kernel during the PTP_PIN_GETFUNC ioctl and is
-     * ignored for the PTP_PIN_SETFUNC ioctl.
-     */
-    char name[64];
-    /*
-     * Pin index in the range of zero to ptp_clock_caps.n_pins - 1.
-     */
-    unsigned int index;
-    /*
-     * Which of the PTP_PF_xxx functions to use on this pin.
-     */
-    unsigned int func;
-    /*
-     * The specific channel to use for this function.
-     * This corresponds to the 'index' field of the
-     * PTP_EXTTS_REQUEST and PTP_PEROUT_REQUEST ioctls.
-     */
-    unsigned int chan;
-    /*
-     * Reserved for future use.
-     */
-    unsigned int rsv[5];
-};
+//struct ptp_pin_desc {
+//    /*
+//     * Hardware specific human readable pin name. This field is
+//     * set by the kernel during the PTP_PIN_GETFUNC ioctl and is
+//     * ignored for the PTP_PIN_SETFUNC ioctl.
+//     */
+//    char name[64];
+//    /*
+//     * Pin index in the range of zero to ptp_clock_caps.n_pins - 1.
+//     */
+//    unsigned int index;
+//    /*
+//     * Which of the PTP_PF_xxx functions to use on this pin.
+//     */
+//    unsigned int func;
+//    /*
+//     * The specific channel to use for this function.
+//     * This corresponds to the 'index' field of the
+//     * PTP_EXTTS_REQUEST and PTP_PEROUT_REQUEST ioctls.
+//     */
+//    unsigned int chan;
+//    /*
+//     * Reserved for future use.
+//     */
+//    unsigned int rsv[5];
+//};
 
 char *device_m;             /* PTP device */
 int index_m;                /* Channel index, '1' corresponds to 'TIMER6' */
