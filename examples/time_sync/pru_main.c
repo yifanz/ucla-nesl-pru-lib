@@ -112,10 +112,17 @@ int main()
             // Time synchronization started
             u64 ts_pru = read_pru_time(&time);
 
+#if PRU_NUM == 0
             // Send a pulse on P9_27
             assert_pin(P9_27);
             WAIT_US(10);
             deassert_pin(P9_27);
+#else
+            // Send a pulse on P9_27
+            assert_pin(P8_46);
+            WAIT_US(10);
+            deassert_pin(P8_46);
+#endif
 
             // Get the time when the host received the pulse
             uint64_t ts_host = 0;

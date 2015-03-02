@@ -134,7 +134,7 @@ int main (void)
     init_rbuffer(send_to_pru_rbuffer);
 
     // Setup QoT
-    if (init_qot("/dev/ptp1", 1)) {
+    if (init_qot("/dev/ptp1", 0)) {
         printf("Initialize QoT time sync failed\n");
         exit(EXIT_FAILURE);
     }
