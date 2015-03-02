@@ -57,38 +57,6 @@
                 pinctrl-single,pins = <0x19c  0x25>; };     /* Mode 5, Pull-Down, RxActive */
             P9_28_pruin_pin: pinmux_P9_28_pruin_pin {
                 pinctrl-single,pins = <0x19c  0x26>; };     /* Mode 6, Pull-Down, RxActive */
-
-            /* P8_45 (ZCZ ball R1 ) hdmi    */
-           P8_45_default_pin: pinmux_P8_45_default_pin {
-                pinctrl-single,pins = <0x0A0  0x27>; };     /* Mode 7, Pull-Down, RxActive */
-            P8_45_gpio_pin: pinmux_P8_45_gpio_pin {
-                pinctrl-single,pins = <0x0A0  0x2F>; };     /* Mode 7, RxActive */
-            P8_45_gpio_pu_pin: pinmux_P8_45_gpio_pu_pin {
-                pinctrl-single,pins = <0x0A0  0x37>; };     /* Mode 7, Pull-Up, RxActive */
-            P8_45_gpio_pd_pin: pinmux_P8_45_gpio_pd_pin {
-                pinctrl-single,pins = <0x0A0  0x27>; };     /* Mode 7, Pull-Down, RxActive */
-            P8_45_pruout_pin: pinmux_P8_45_pruout_pin {
-                pinctrl-single,pins = <0x0A0  0x05>; };     /* Mode 5, Pull-Down*/
-            P8_45_pruin_pin: pinmux_P8_45_pruin_pin {
-                pinctrl-single,pins = <0x0A0  0x26>; };     /* Mode 6, Pull-Down, RxActive */
-            P8_45_pwm_pin: pinmux_P8_45_pwm_pin {
-                pinctrl-single,pins = <0x0A0  0x03>; };     /* Mode 3, Pull-Down*/
-
-            /* P8_46 (ZCZ ball R2 ) hdmi    */
-            P8_46_default_pin: pinmux_P8_46_default_pin {
-                pinctrl-single,pins = <0x0A4  0x27>; };     /* Mode 7, Pull-Down, RxActive */
-            P8_46_gpio_pin: pinmux_P8_46_gpio_pin {
-                pinctrl-single,pins = <0x0A4  0x2F>; };     /* Mode 7, RxActive */
-            P8_46_gpio_pu_pin: pinmux_P8_46_gpio_pu_pin {
-                pinctrl-single,pins = <0x0A4  0x37>; };     /* Mode 7, Pull-Up, RxActive */
-            P8_46_gpio_pd_pin: pinmux_P8_46_gpio_pd_pin {
-                pinctrl-single,pins = <0x0A4  0x27>; };     /* Mode 7, Pull-Down, RxActive */
-            P8_46_pruout_pin: pinmux_P8_46_pruout_pin {
-                pinctrl-single,pins = <0x0A4  0x05>; };     /* Mode 5, Pull-Down*/
-            P8_46_pruin_pin: pinmux_P8_46_pruin_pin {
-                pinctrl-single,pins = <0x0A4  0x26>; };     /* Mode 6, Pull-Down, RxActive */
-            P8_46_pwm_pin: pinmux_P8_46_pwm_pin {
-                pinctrl-single,pins = <0x0A4  0x03>; };     /* Mode 3, Pull-Down*/
        };
    };
 
@@ -121,32 +89,6 @@
                 pinctrl-6 = <&P9_28_pwm2_pin>;
                 pinctrl-7 = <&P9_28_pruout_pin>;
                 pinctrl-8 = <&P9_28_pruin_pin>;
-            };
-
-            P8_45_pinmux { /* hdmi */
-                compatible = "bone-pinmux-helper";
-                status = "okay";
-                pinctrl-names = "default", "gpio", "gpio_pu", "gpio_pd", "pruout", "pruin","pwm";
-                pinctrl-0 = <&P8_45_default_pin>;
-                pinctrl-1 = <&P8_45_gpio_pin>;
-                pinctrl-2 = <&P8_45_gpio_pu_pin>;
-                pinctrl-3 = <&P8_45_gpio_pd_pin>;
-                pinctrl-4 = <&P8_45_pruout_pin>;
-                pinctrl-5 = <&P8_45_pruin_pin>;
-                pinctrl-6 = <&P8_45_pwm_pin>;
-            };
-
-            P8_46_pinmux { /* hdmi */
-                compatible = "bone-pinmux-helper";
-                status = "okay";
-                pinctrl-names = "default", "gpio", "gpio_pu", "gpio_pd", "pruout", "pruin","pwm";
-                pinctrl-0 = <&P8_46_default_pin>;
-                pinctrl-1 = <&P8_46_gpio_pin>;
-                pinctrl-2 = <&P8_46_gpio_pu_pin>;
-                pinctrl-3 = <&P8_46_gpio_pd_pin>;
-                pinctrl-4 = <&P8_46_pruout_pin>;
-                pinctrl-5 = <&P8_46_pruin_pin>;
-                pinctrl-6 = <&P8_46_pwm_pin>;
             };
       };
    };
