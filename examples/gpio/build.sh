@@ -12,8 +12,7 @@
 #directory for copyright and GNU GPLv3 license information.
 #
 
-PRU_NUM=0; # which PRU 0 or 1
-PRU_SDK=/root/pru_2.0.0B2
+PRU_NUM=1; # which PRU 0 or 1
 PRU_SRC="pru_main.c"
 HOST_SRC="host_main.c"
 PRU_TARGET=pru.out
@@ -25,12 +24,10 @@ cd $SCRIPT_DIR
 mkdir -p $GEN
 
 echo "Compiling and linking the PRU firmware"
-$PRU_SDK/bin/clpru --silicon_version=3 --keep_asm --c_src_interlist \
+clpru --silicon_version=3 --keep_asm --c_src_interlist \
     --asm_directory=$GEN --obj_directory=$GEN --temp_directory=$GEN \
     -DPRU_NUM=$PRU_NUM \
     $PRU_SRC \
-    -i$PRU_SDK/include \
-    -i$PRU_SDK/lib \
     -i../../include \
     -z AM3359_PRU.cmd \
     -o $GEN/$PRU_TARGET \
@@ -52,7 +49,7 @@ cd $GEN
 # Instead, we break out the text and data segments and so that we can
 # manually map them into PRU memory.
 echo "Generating text and data segments (text.bin and data.bin)"
-$PRU_SDK/bin/hexpru ../bin.cmd $PRU_TARGET
+hexpru ../bin.cmd $PRU_TARGET
 
 if [ $? -ne 0 ]; then
     echo "Generating text and data segments FAILED"
