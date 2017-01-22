@@ -1,78 +1,33 @@
 # UCLA NESL PRU Library
 
-I'm using the official [`Debian 7.5 (BeagleBone, BeagleBone Black - 2GB SD) 2014-05-14`](https://debian.beagleboard.org/images/bone-debian-7.5-2014-05-14-2gb.img.xz) image which has the `3.8.13-bone50` kernel.
-I don't recommend the newer versions for the following reasons: USB ethernet instability, significantly slower boot time and the latest TI kernels force you to use `remote_proc` instead of the better documented and tested `prussdrv` for interfacing with the PRUs. You can copy the image to an SD card with the `dd` command. Find the device node of your SD card. In my case it is `/dev/rdisk2`, but this most likely will NOT be the case for you. If you copy to the wrong device node, you may erase your hard disk.
+There are two approaches to interfacing with the PRU subsystem (PRUSS).
+Older kernels (pre-4.1.x) generally use the user-space IO (UIO) driver and newer ones use [`remote_proc`](https://www.kernel.org/doc/Documentation/remoteproc.txt) and [`RPMsg`](https://www.kernel.org/doc/Documentation/rpmsg.txt).
+The UIO driver simply maps regions of PRUSS memory and registers directly into user-space with a minimal kernel part for handling interrupts.
+On the other hand, the `remote_proc` framework provides a high level interface for controlling (power on, load firmware, power off) heterogeneous remote processor systems as well as the ability to map ELF formatted binaries into PRU memory.
+`RPMsg` provides a communication channel between the PRU and the main processor using `virtio` based messaging.
+User-space programs are expected to use syscalls on device nodes (e.g. `/dev/rpmsg31`) to access the PRU (direct access may still be possible using `/dev/mem`, but I have not tested this).
+
+Despite these advantages, we chose to use the UIO driver because it is better documented and there exists more code examples from the community.
+We also prefer the low latency properties of accessing PRU memory mapped directly into user-space over the more throughput optimized approach of `RPMsg`.
+Finally, the UIO driver is more portable and works on both old and new Linux kernels. Even the corresponding PRU driver on the FreeBSD operating system takes a similar approach.
+
+## Quick Start
+
+The easiest way to get started is to boot with our [image](https://github.com/yifanz/ucla-nesl-pru-sys-images#how-to-flash-to-sd-card) which contains this repository along with all of the necessary dependencies. This helps avoid the 'works on my machine' syndrome and should save you hours of dependency management problems. If you choose not to use our image, here is roughly what you would need to install on your own system.
+
+* A kernel which has the `uio_pruss` module. Do `lsmod | grep pru` to see if `uio_pruss` is running.
+* The AM335x PRU PACKAGE ([source](https://github.com/beagleboard/am335x_pru_package)). Check under `/usr/local/include` and `/usr/local/lib` to see if your distribution already has `prussdrv.h` and `libprussdrv.so` installed.
+* TI's PRU code generation tools ([binaries](http://software-dl.ti.com/codegen/non-esd/downloads/beta.ht)). Check `/usr/share/ti/cgt-pru` to see if your distribution already has this installed.
+
+Assuming that you are using our image, you can terminal into the device using `root` as the username without any password. Here is an example of how to run the `gpio` example:
 
 ```
-sudo dd bs=1m if=bone-debian-7.5-2014-05-14-2gb.img of=/dev/rdisk2
+cd ucla-nesl-pru-lib/examples/gpio
+./build.sh
+./config-pins.sh
+cd gen/
+./host
 ```
 
-You can terminal into the device as `root` without a password. I'm using USB over ethernet which defaults to `192.168.7.2`. You may need to use a different IP address.
-
-```
-ssh root@192.168.7.2
-```
-
-First, expand the available storage. Although you only need a 2GB SD card to hold the base image, I'm using a 16 GB SD card.
-
-```
-cd /opt/scripts/tools
-./grow_partition.sh
-```
-
-I recommend disabling HDMI and eMMC because they occupy too many of the PRU's pins.
-In `/boot/uboot/uEnv.txt` uncomment this:
-
-```
-##BeagleBone Black:
-##Disable HDMI/eMMC
-cape_disable=capemgr.disable_partno=BB-BONELT-HDMI,BB-BONELT-HDMIN,BB-BONE-EMMC-2G
-```
-
-Later, when you want to load your own custom overlays on bootup you can uncomment this and add the names of your overlays:
-
-```
-##Example
-#cape_disable=capemgr.disable_partno=
-cape_enable=capemgr.enable_partno=NESL-PRU,cape-universal
-```
-
-Then, `reboot` to apply the changes. You can check if it worked like this:
-
-```
-root@beaglebone:/sys/devices/bone_capemgr.9# cat slots
- 0: 54:PF--- 
- 1: 55:PF--- 
- 2: 56:PF--- 
- 3: 57:PF--- 
- 4: ff:P-O-- Bone-LT-eMMC-2G,00A0,Texas Instrument,BB-BONE-EMMC-2G
- 5: ff:P-O-- Bone-Black-HDMI,00A0,Texas Instrument,BB-BONELT-HDMI
- 6: ff:P-O-- Bone-Black-HDMIN,00A0,Texas Instrument,BB-BONELT-HDMIN
-```
-
-Notice that the `L` is missing from `ff:P-O-L` which means that those overlays are not loaded.
-
-If you are also using ethernet over USB, then you may need to run [`bbb-usb-net-gateway.sh`](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/scripts/bbb-usb-net-gateway.sh) on the device and [`host-usb-net-forwarding.sh`](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/scripts/host-usb-net-forwarding.sh) on the host to be able to access the internet.
-Make sure you update the variables in those scripts to match your network interfaces.
-If you run into DNS issues, you can try adding `nameserver 8.8.8.8` to `/etc/resolv.conf`.
-
-Next, install the [PRU code generation tools](http://software-dl.ti.com/codegen/non-esd/downloads/beta.htm) from TI. I'm using `v2.0.0 Beta 2` for `ARM`. Newer versions are available, but this one has better documentation and more code examples.  You have to create a TI account and agree to their license. Once you do, you will be allowed to download a 40MB file called `ti_cgt_pru_2.0.0B2_armlinuxa8hf_installer.sh`. Executing it will install the tools in `pru_2.0.0B2/` under the current working directory.
-
-It is helpful to have `git` setup so you can share code. Here is an example of how to setup your `.gitconfig`.
-
-```
-[http]
-	sslverify = false
-[user]
-	name = Yi-Fan Zhang
-	email = yifanzhang@engineering.ucla.edu
-```
-
-I would `git clone` this project as well as Derek Molloy's [exploringBB project](https://github.com/derekmolloy/exploringBB). Much of the code in this project uses code from exploringBB as a template. You should also install the latest `AM335x PRU Package` which contains `libprussdrv`.
-
-```
-git clone https://github.com/beagleboard/am335x_pru_package.git
-cd am335x_pru_package
-make CROSS_COMPILE=""
-make install PREFIX=/usr CROSS_COMPILE=""
-```
+As a convention, all examples have a `pru_main.c` and `host_main.c` which correspond to the parts that runs on the PRU and Linux, respectively. Take a look at `build.sh` if you want to change this.
+Every project under the [`examples`](https://github.com/yifanz/ucla-nesl-pru-lib/tree/master/examples) directory can be used as a template. Simply copy them elsewhere to create your own project.
