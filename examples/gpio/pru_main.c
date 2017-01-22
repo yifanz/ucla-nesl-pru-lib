@@ -1,3 +1,4 @@
+#include "nesl_pru_intc.h"
 #include "nesl_pru_gpio.h"
 #include "nesl_pru_wait.h"
 
