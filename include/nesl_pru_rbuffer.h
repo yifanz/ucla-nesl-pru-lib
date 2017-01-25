@@ -7,21 +7,32 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "nesl_common_rbuffer.h"
+
+#define RBUF_SIZE 64
+#define RBUF_IDX(i) (i % RBUF_SIZE)
+
+/*
+ * Generic ring buffer implementation
+ * Create two if you want bi-directional communication
+ */
+struct rbuffer
+{
+    uint16_t c;
+    uint16_t p;
+    uint32_t buffer[RBUF_SIZE];
+};
 
 void
-init_rbuffer(uint32_t addr)
+init_rbuffer(struct rbuffer *rbuf)
 {
-    __far struct rbuffer *rbuf = (void*) (unsigned long) addr;
     memset(rbuf, 0, sizeof(struct rbuffer));
     rbuf->c = 0;
     rbuf->p = 1;
 }
 
-int
-rbuf_write_int32(uint32_t addr, uint32_t data)
+short
+rbuf_write_uint32(struct rbuffer *rbuf, uint32_t data)
 {
-    __far struct rbuffer *rbuf = (void*) (unsigned long) addr;
     uint16_t p = rbuf->p;
     if (p != rbuf->c) {
         rbuf->buffer[p] = data;
@@ -33,9 +44,8 @@ rbuf_write_int32(uint32_t addr, uint32_t data)
 }
 
 uint32_t
-rbuf_read_int32(uint32_t addr, int *status)
+rbuf_read_uint32(struct rbuffer *rbuf, short *status)
 {
-    __far struct rbuffer *rbuf = (void*) (unsigned long) addr;
     uint16_t c = RBUF_IDX(rbuf->c+1);
     if (c != rbuf->p) {
         uint32_t data = rbuf->buffer[c];

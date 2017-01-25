@@ -17,7 +17,7 @@
 
 int main()
 {
-    __far uint32_t *shared_mem = (void*) (unsigned long) 0x10000;
+    uint32_t *shared_mem = (void*) (unsigned long) 0x10000;
 
     ENABLE_TICKS();
     TICKS = 0;

@@ -31,7 +31,7 @@ int main()
     adc_start_sampling();
     wait_for_adc();
 
-    __far uint32_t *shared_mem = (void*) (unsigned long) 0x10000;
+    uint32_t *shared_mem = (void*) (unsigned long) 0x10000;
     unsigned int data, i, step_id, value;
     unsigned int count = read_adc_count();
 

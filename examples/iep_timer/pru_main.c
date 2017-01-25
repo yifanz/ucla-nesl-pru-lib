@@ -16,26 +16,25 @@
 
 int main()
 {
-    uint32_t buf_addr = 0x10000;
-    init_rbuffer(buf_addr);
+    struct rbuffer *rbuf = (struct rbuffer *) (uint32_t) 0x10000;
+    init_rbuffer(rbuf);
 
     DISABLE_IEP_TMR();
     ENABLE_IEP_TMR();
 
+    int i = 30;
     IEP_CNT = 0;
-    uint32_t last = 0;
-    uint32_t now = IEP_CNT;
 
-    while(last < now) {
-        last = now;
-        now = IEP_CNT;
-        rbuf_write_int32(buf_addr, now);
+    while(i--) {
+        rbuf_write_uint32(rbuf, IEP_CNT);
+        TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
         WAIT_MS(1000);
     }
 
     DISABLE_IEP_TMR();
 
     // Exiting the application - send the interrupt
-    TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
+    TRIG_INTC(4); // Trigger interrupt PRUEVENT_1
+    rbuf_write_uint32(rbuf, 0xfeedface);
     __halt(); // halt the PRU
 }

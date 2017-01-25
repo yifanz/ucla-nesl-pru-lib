@@ -19,7 +19,7 @@ volatile register unsigned int __R31, __R30;
 
 static uint32_t *CTRL_REG = (uint32_t*) 0x22000;
 
-#define HWREG(x) (*((volatile unsigned int *)(x)))
+#define HWREG(addr) (*((volatile uint32_t *)(addr)))
 
 // PRU Module Registers
 #define PRU_ICSS_CFG 0x26000

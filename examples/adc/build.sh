@@ -36,6 +36,11 @@ $PRU_SDK/bin/clpru --silicon_version=3 --keep_asm --c_src_interlist \
     -o $GEN/$PRU_TARGET \
     -m $GEN/$PRU_TARGET.map
 
+if [ $? -ne 0 ]; then
+    echo "Compile and link FAILED"
+    exit 1
+fi
+
 pushd .
 cd $GEN
 
@@ -48,7 +53,23 @@ cd $GEN
 # manually map them into PRU memory.
 echo "Generating text and data segments (text.bin and data.bin)"
 $PRU_SDK/bin/hexpru ../bin.cmd $PRU_TARGET
+
+if [ $? -ne 0 ]; then
+    echo "Generating text and data segments FAILED"
+    exit 1
+fi
+
 popd
 
-echo "Compiling the host application"
-gcc -DPRU_NUM=$PRU_NUM $HOST_SRC -o $GEN/$HOST_TARGET -lpthread -lprussdrv
+echo "Compiling and linking the host application"
+gcc -I../../include -DPRU_NUM=$PRU_NUM $HOST_SRC -o $GEN/$HOST_TARGET -lpthread -lprussdrv
+
+if [ $? -ne 0 ]; then
+    echo "Compiling and linking the host application FAILED"
+    exit 1
+fi
+
+echo "Build SUCCESSFUL."
+echo "To run you must change to the gen directory:"
+echo "cd gen/"
+echo "./host"

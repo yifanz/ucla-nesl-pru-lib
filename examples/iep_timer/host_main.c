@@ -17,23 +17,31 @@
 #include <pthread.h>
 #include <prussdrv.h>
 #include <pruss_intc_mapping.h>
-#include "nesl_host_rbuffer.h"
+#include "nesl_pru_rbuffer.h"
 
 volatile int stop = 0;
+volatile uint8_t *shared_mem;
 
 void *threadFunction(void *value){
     do {
         prussdrv_pru_wait_event(PRU_EVTOUT_0);
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
-        stop = 1;
-        //printf("Done\n");
-    } while (1);
+        struct rbuffer *rbuf = (struct rbuffer *) shared_mem;
+        short status = 0;
+        uint32_t data;
+        data = rbuf_read_uint32(rbuf, &status);
+        if (!status) {
+            uint64_t ms = data;
+            ms *= 5;
+            ms /= 1000000;
+            printf("IEP count: %lu (%lu ms)\n", data, ms);
+        }
+    } while (!stop);
 }
 
 int main (void)
 {
     int n, ret;
-    uint8_t *shared_mem;
 
     if(getuid()!=0){
         printf("You must run this program as root. Exiting.\n");
@@ -53,6 +61,12 @@ int main (void)
         printf("Failed to open the PRU-ICSS, have you loaded the overlay?");
         exit(EXIT_FAILURE);
     }
+    ret = prussdrv_open (PRU_EVTOUT_1);
+    if(ret){
+        printf("Failed to open the PRU-ICSS, have you loaded the overlay?");
+        exit(EXIT_FAILURE);
+    }
+
     /* Map PRU's INTC */
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
@@ -62,7 +76,7 @@ int main (void)
         exit(EXIT_FAILURE);
     }
 
-    memset(shared_mem, 0, 0x2000);
+    memset((void*) shared_mem, 0, 0x2000);
 
     /* Load the memory data file */
     prussdrv_load_datafile(PRU_NUM, "./data.bin");
@@ -76,13 +90,8 @@ int main (void)
         exit(EXIT_FAILURE);
     }
 
-    int status = 0;
-    do {
-        uint32_t data = rbuf_read_int32((struct rbuffer *)shared_mem, &status);
-        if (!status) {
-            printf("count: %lu\n", data);
-        }
-    } while(!stop);
+    prussdrv_pru_wait_event(PRU_EVTOUT_1);
+    stop = 1;
 
     /* Disable PRU and close memory mappings */
     prussdrv_pru_disable(PRU_NUM);
