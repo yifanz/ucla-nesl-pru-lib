@@ -35,6 +35,5 @@ int main()
 
     // Exiting the application - send the interrupt
     TRIG_INTC(4); // Trigger interrupt PRUEVENT_1
-    rbuf_write_uint32(rbuf, 0xfeedface);
     __halt(); // halt the PRU
 }
