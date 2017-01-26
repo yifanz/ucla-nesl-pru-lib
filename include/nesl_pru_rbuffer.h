@@ -43,6 +43,15 @@ rbuf_write_uint32(struct rbuffer *rbuf, uint32_t data)
     return -1;
 }
 
+short
+rbuf_write_uint64(struct rbuffer *rbuf, uint64_t data)
+{
+    short status = rbuf_write_uint32(rbuf, data);
+    if (!status) status = rbuf_write_uint32(rbuf, data >> 32);
+
+    return status;
+}
+
 uint32_t
 rbuf_read_uint32(struct rbuffer *rbuf, short *status)
 {
@@ -57,4 +66,25 @@ rbuf_read_uint32(struct rbuffer *rbuf, short *status)
     if (status != NULL) *status = -1;
     return 0;
 }
+
+uint64_t
+rbuf_read_uint64(struct rbuffer *rbuf, short *status)
+{
+    uint64_t data;
+    uint32_t lower = rbuf_read_uint32(rbuf, status);
+    uint32_t upper;
+
+    if (!*status) {
+        upper = rbuf_read_uint32(rbuf, status);
+    }
+
+    if (*status) return 0;
+
+    data = upper;
+    data = data << 32;
+    data |= lower;
+
+    return data;
+}
+
 #endif
