@@ -12,3 +12,5 @@ Install Overlays:
 # Only if you want to do time sync
 ./install.sh NESL-PRU-QOT
 ```
+
+From my experience, repeatedly loading and unloading overlays may cause system instability. Often, the configuration does not get applied when you reload an overlay. In that case, try rebooting.
