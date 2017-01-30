@@ -14,6 +14,7 @@
 #include "nesl_pru_rbuffer.h"
 #include "nesl_pru_time.h"
 #include "nesl_pru_ticks.h"
+#include "nesl_pru_gpio.h"
 #include <stdint.h>
 
 cycle_t
@@ -24,8 +25,10 @@ read_cc(const struct cyclecounter *cc)
 
 int main()
 {
-    struct rbuffer *rbuf = (struct rbuffer *) (uint32_t) 0x10000;
-    init_rbuffer(rbuf);
+    struct rbuffer *send_buf = (struct rbuffer *) (uint32_t) 0x10000;
+    init_rbuffer(send_buf);
+
+    struct rbuffer *rec_buf = (struct rbuffer *) (uint32_t) (0x10000 + sizeof(struct rbuffer));
 
     struct timecounter tc = {0};
     struct cyclecounter cc = {0};
@@ -35,6 +38,11 @@ int main()
     cc.mult = 5;
     cc.shift = 0;
 
+    short status = -1;
+    uint64_t data = 0;
+
+    WAIT_MS(2000);
+
     DISABLE_IEP_TMR();
     ENABLE_IEP_TMR();
     IEP_CNT = 0;
@@ -43,7 +51,40 @@ int main()
 
     int i = 30;
     while(i--) {
-        rbuf_write_uint64(rbuf, timecounter_read(&tc));
+        if (i % 5 == 0) {
+            u64 ts_pru = timecounter_read(&tc);
+            assert_pin(P9_27);
+            WAIT_US(10);
+            deassert_pin(P9_27);
+
+            uint64_t ts_host = 0;
+
+            do {
+                data = rbuf_read_uint64(rec_buf, &status);
+            } while(status);
+
+            ts_host = data;
+
+            // discard any other messages
+            /*
+            do {
+                data = rbuf_read_uint64(rec_buf, &status);
+            } while(!status);
+            */
+
+            //rbuf_write_uint64(send_buf, ts_host);
+            s64 delta = 0;
+            if (ts_host > ts_pru) {
+                delta = ts_host - ts_pru;
+            } else if (ts_host < ts_pru) {
+                delta = ts_pru - ts_host;
+                delta = -delta;
+            }
+            timecounter_adjtime(&tc, delta);
+            //rbuf_write_uint64(send_buf, delta);
+        }
+
+        rbuf_write_uint64(send_buf, timecounter_read(&tc));
         TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
         WAIT_MS(1000);
     }

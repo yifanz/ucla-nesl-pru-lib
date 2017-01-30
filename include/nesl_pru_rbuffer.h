@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define RBUF_SIZE 64
+#define RBUF_SIZE 256
 #define RBUF_IDX(i) (i % RBUF_SIZE)
 
 /*
@@ -46,10 +46,17 @@ rbuf_write_uint32(struct rbuffer *rbuf, uint32_t data)
 short
 rbuf_write_uint64(struct rbuffer *rbuf, uint64_t data)
 {
-    short status = rbuf_write_uint32(rbuf, data);
-    if (!status) status = rbuf_write_uint32(rbuf, data >> 32);
-
-    return status;
+    uint32_t lower = (uint32_t) data;
+    uint32_t upper = data >> 32;
+    uint16_t p = rbuf->p;
+    if (p != rbuf->c && RBUF_IDX(p+1) != rbuf->c) {
+        rbuf->buffer[p] = lower;
+        rbuf->buffer[RBUF_IDX(p+1)] = upper;
+        rbuf->p = RBUF_IDX(p+2);
+        return 0;
+    }
+    // else buffer is full
+    return -1;
 }
 
 uint32_t
@@ -70,21 +77,21 @@ rbuf_read_uint32(struct rbuffer *rbuf, short *status)
 uint64_t
 rbuf_read_uint64(struct rbuffer *rbuf, short *status)
 {
-    uint64_t data;
-    uint32_t lower = rbuf_read_uint32(rbuf, status);
-    uint32_t upper;
-
-    if (!*status) {
-        upper = rbuf_read_uint32(rbuf, status);
+    uint64_t data = 0;
+    uint16_t c = RBUF_IDX(rbuf->c+1);
+    if (c != rbuf->p && RBUF_IDX(c+1) != rbuf->p) {
+        uint32_t lower = rbuf->buffer[c];
+        uint32_t upper = rbuf->buffer[RBUF_IDX(c+1)];
+        data = upper;
+        data = data << 32;
+        data |= lower;
+        rbuf->c = RBUF_IDX(c+1);
+        if (status != NULL) *status = 0;
+        return data;
     }
-
-    if (*status) return 0;
-
-    data = upper;
-    data = data << 32;
-    data |= lower;
-
-    return data;
+    // no new data
+    if (status != NULL) *status = -1;
+    return 0;
 }
 
 #endif

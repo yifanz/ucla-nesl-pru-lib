@@ -15,6 +15,7 @@
 
 #define CLOCKSOURCE_MASK(bits) (cycle_t)((bits) < 64 ? ((1ULL<<(bits))-1) : -1)
 
+typedef int64_t s64;
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef u64 cycle_t;
@@ -46,6 +47,12 @@ timecounter_init(struct timecounter *tc,
     tc->nsec = start_tstamp;
     tc->mask = (1ULL << cc->shift) - 1;
     tc->frac = 0;
+}
+
+static inline void
+timecounter_adjtime(struct timecounter *tc, s64 delta)
+{
+    tc->nsec += delta;
 }
 
 static inline u64
