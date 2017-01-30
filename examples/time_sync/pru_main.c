@@ -72,7 +72,9 @@ int main()
             } while(!status);
             */
 
-            //rbuf_write_uint64(send_buf, ts_host);
+            // send time the pin was asserted
+            rbuf_write_uint64(send_buf, ts_host);
+
             s64 delta = 0;
             if (ts_host > ts_pru) {
                 delta = ts_host - ts_pru;
@@ -81,9 +83,12 @@ int main()
                 delta = -delta;
             }
             timecounter_adjtime(&tc, delta);
-            //rbuf_write_uint64(send_buf, delta);
+
+            // send back delta
+            rbuf_write_uint64(send_buf, delta);
         }
 
+        // send current ts
         rbuf_write_uint64(send_buf, timecounter_read(&tc));
         TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
         WAIT_MS(1000);

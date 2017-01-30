@@ -79,14 +79,12 @@ void *receive_pru_thread(void *value)
         prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
         struct rbuffer *rbuf = (struct rbuffer *) shared_mem;
         short status = 0;
-        uint64_t data;
-        data = rbuf_read_uint64(rbuf, &status);
-        if (!status) {
-            uint64_t ms = data;
-            ms /= 1000000ull;
-            uint64_t us = data;
-            us /= 1000ull;
-            printf("%llu ns (%llu us, %llu ms)\n", data, us, ms);
+        int64_t data;
+        while(!status) {
+            data = rbuf_read_uint64(rbuf, &status);
+            if (!status) {
+                printf("%lld ns\n", data);
+            }
         }
     } while (!stop);
 }
@@ -146,8 +144,11 @@ void *send_pru_thread(void *value)
         uint64_t nano_ts = event.t.sec * 1000000000;
         nano_ts += event.t.nsec;
         rbuf_write_uint64(rbuf, nano_ts); // send ts to PRU
+        /*
         printf("Sync Time - %lld.%09u - %llu ns\n",
                 event.t.sec, event.t.nsec, nano_ts);
+                */
+        printf("Sync Time -  %llu ns\n", nano_ts);
     }
 
     /* Disable the pin */
