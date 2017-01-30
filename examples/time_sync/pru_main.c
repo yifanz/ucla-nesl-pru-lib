@@ -73,7 +73,7 @@ int main()
             */
 
             // send time the pin was asserted
-            rbuf_write_uint64(send_buf, ts_host);
+            rbuf_write_uint64(send_buf, ts_pru);
 
             s64 delta = 0;
             if (ts_host > ts_pru) {
