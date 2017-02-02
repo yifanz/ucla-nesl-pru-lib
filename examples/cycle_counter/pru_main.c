@@ -18,15 +18,29 @@
 int main()
 {
     uint32_t *shared_mem = (void*) (unsigned long) 0x10000;
+    uint32_t *mem1 = shared_mem;
+    uint32_t *mem2 = shared_mem+1;
+    uint32_t *mem3 = shared_mem+2;
 
     ENABLE_TICKS();
-    TICKS = 0;
 
-    *shared_mem = TICKS;
-    WAIT_CYCLES(2);
-    *(shared_mem+1) = TICKS;
-    WAIT_CYCLES(100000);
-    *(shared_mem+2) = TICKS;
+    TICKS = 0;
+    WAIT_CYCLES(200); // 1 us
+    *mem1 = TICKS;
+
+    TICKS = 0;
+    WAIT_US(1); // 1 us
+    *mem2 = TICKS;
+
+    TICKS = 0;
+    // Wait 1 us using inline assembly
+    __asm__ __volatile__
+        (
+         " LDI32 r0, 99\n"
+         "WAIT_LABEL: SUB r0, r0, 1\n"
+         " QBNE WAIT_LABEL, r0, 0\n"
+        );
+    *mem3 = TICKS;
 
     // Exiting the application - send the interrupt
     TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
