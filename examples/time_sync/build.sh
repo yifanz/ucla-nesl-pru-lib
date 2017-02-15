@@ -15,7 +15,7 @@
 PRU_NUM=0; # which PRU 0 or 1
 PRU_SDK=/root/pru_2.0.0B2
 PRU_SRC="pru_main.c"
-HOST_SRC="host_main.c"
+HOST_SRC="host_main.c host_qot.c"
 PRU_TARGET=pru.out
 HOST_TARGET=host
 GEN=gen

@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define RBUF_SIZE 256
-#define RBUF_IDX(i) (i % RBUF_SIZE)
+#define RBUF_IDX(i) ((i) % RBUF_SIZE)
 
 /*
  * Generic ring buffer implementation

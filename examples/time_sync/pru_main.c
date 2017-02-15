@@ -16,6 +16,18 @@
 #include "nesl_pru_ticks.h"
 #include "nesl_pru_gpio.h"
 #include <stdint.h>
+#include <stdlib.h>
+
+#include "shared_conf.h"
+
+#define SHARED_MEM_BASE 0x10000
+
+void
+terminate()
+{
+    TRIG_INTC(4); // Trigger interrupt PRUEVENT_1
+    __halt(); // halt the PRU
+}
 
 cycle_t
 read_cc(const struct cyclecounter *cc)
@@ -23,80 +35,114 @@ read_cc(const struct cyclecounter *cc)
     return IEP_CNT;
 }
 
+/*
+ * Custom function that lets you slew the IEP counter.
+ * This is just for demo purposes. You should define your own algorithm.
+ */
+int
+slew_cc(s64 delta)
+{
+    uint8_t comp_cycles = 0;
+    uint8_t comp_inc = 0;
+    uint64_t abs_delta = llabs(delta);
+
+    if (abs_delta < 100) {
+        if (delta < 0) {
+            // PRU clock was too fast
+            comp_cycles = abs_delta / 5;
+            comp_inc = 0;
+        } else {
+            // PRU clock was too slow
+            comp_cycles = 1;
+            comp_inc = abs_delta / 5;
+        }
+
+        SET_IEP_COMP_INC(comp_inc);
+        IEP_COMPEN = comp_cycles;
+
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/*
+ * This program demonstrates time synchronization between the host and PRU.
+ *
+ * The PRU will send it's own time to the host every ~1 second and the host
+ * will print that time out on the terminal.
+ * Every ~5 seconds, we will do a time synchronization.
+ * This will continue for ~30 seconds and then we terminate.
+ */
 int main()
 {
-    struct rbuffer *send_buf = (struct rbuffer *) (uint32_t) 0x10000;
+    // Wait enough time for host to startup
+    WAIT_MS(1000);
+
+    // Send PRU time back to host for printing
+    struct rbuffer *send_buf =
+        (struct rbuffer *) (uint32_t) (SHARED_MEM_BASE + RBUF_ADDR);
     init_rbuffer(send_buf);
 
-    struct rbuffer *rec_buf = (struct rbuffer *) (uint32_t) (0x10000 + sizeof(struct rbuffer));
+    // Required for getting host timestamp
+    struct rbuffer *rec_buf =
+        (struct rbuffer *) (uint32_t) (SHARED_MEM_BASE + RBUF_ADDR
+                + sizeof(struct rbuffer));
 
-    struct timecounter tc = {0};
-    struct cyclecounter cc = {0};
-
-    cc.read = read_cc;
-    cc.mask = CLOCKSOURCE_MASK(32);
-    cc.mult = 5;
-    cc.shift = 0;
-
-    short status = -1;
-    uint64_t data = 0;
-
-    WAIT_MS(2000);
-
+    // IEP is our clock source
     DISABLE_IEP_TMR();
     ENABLE_IEP_TMR();
     IEP_CNT = 0;
 
-    timecounter_init(&tc, &cc, IEP_CNT);
+    struct pru_time time;
 
+    // Initialize pru_time with IEP as the source
+    // slew_cc is optional
+    //init_pru_time(&time, 5, 0, 32, read_cc, slew_cc);
+    init_pru_time(&time, 5, 0, 32, read_cc, NULL);
+
+    short status = -1;
+    uint64_t data = 0;
+
+    // Run for ~30 seconds total.
     int i = 30;
     while(i--) {
+        // Do synchronization every ~5 seconds
         if (i % 5 == 0) {
-            u64 ts_pru = timecounter_read(&tc);
+            // Time synchronization started
+            u64 ts_pru = read_pru_time(&time);
+
+            // Send a pulse on P9_27
             assert_pin(P9_27);
             WAIT_US(10);
             deassert_pin(P9_27);
 
+            // Get the time when the host received the pulse
             uint64_t ts_host = 0;
-
             do {
                 data = rbuf_read_uint64(rec_buf, &status);
             } while(status);
-
             ts_host = data;
 
-            // discard any other messages
-            /*
-            do {
-                data = rbuf_read_uint64(rec_buf, &status);
-            } while(!status);
-            */
+            // Calculate the offset between host and pru
+            s64 delta = adj_pru_time(&time, ts_pru, ts_host);
 
-            // send time the pin was asserted
-            rbuf_write_uint64(send_buf, ts_pru);
-
-            s64 delta = 0;
-            if (ts_host > ts_pru) {
-                delta = ts_host - ts_pru;
-            } else if (ts_host < ts_pru) {
-                delta = ts_pru - ts_host;
-                delta = -delta;
-            }
-            timecounter_adjtime(&tc, delta);
-
-            // send back delta
-            rbuf_write_uint64(send_buf, delta);
+            // Debugging. If you want to print the ts_pru and delta.
+            //rbuf_write_uint64(send_buf, ts_pru);
+            //rbuf_write_uint64(send_buf, delta);
         }
 
-        // send current ts
-        rbuf_write_uint64(send_buf, timecounter_read(&tc));
+        // Send current pru time back to host for printing
+        rbuf_write_uint64(send_buf, read_pru_time(&time));
+        // Interrupt the host: there is a message in the rbuffer
         TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
+
+        // Pause for a second. Don't want to flood the host with messages.
         WAIT_MS(1000);
     }
 
     DISABLE_IEP_TMR();
 
-    // Exiting the application - send the interrupt
-    TRIG_INTC(4); // Trigger interrupt PRUEVENT_1
-    __halt(); // halt the PRU
+    // Exiting the application
+    terminate();
 }

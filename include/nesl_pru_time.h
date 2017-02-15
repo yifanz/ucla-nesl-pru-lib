@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-#define CLOCKSOURCE_MASK(bits) (cycle_t)((bits) < 64 ? ((1ULL<<(bits))-1) : -1)
+#define CLOCKSOURCE_MASK(bits) (cycle_t)((bits) < 64 ? ((1ULL<<(bits))-1) : (cycle_t) -1)
 
 typedef int64_t s64;
 typedef uint64_t u64;
@@ -35,6 +35,13 @@ struct timecounter
     u64 nsec;
     u64 mask;
     u64 frac;
+};
+
+struct pru_time
+{
+    struct timecounter tc;
+    struct cyclecounter cc;
+    int (*slew_cc)(s64 delta);
 };
 
 void
@@ -99,6 +106,82 @@ timecounter_read(struct timecounter *tc)
     tc->nsec = nsec;
 
     return nsec;
+}
+
+/**
+ * Initialize pru_time with a clock source (e.g. IEP).
+ * This tracks absolute time in nanoseconds.
+ *
+ * Params:
+ * pru_time - pointer to uninitialized pru_time struct
+ * mult, shift - for calculating nanoseconds per clock cycle
+ * bits - bits in clock counter source
+ * read_cc - function for reading the clock counter
+ * slew_cc - Optional function for adjusting clock counter
+ * Return 0 on success
+ */
+int
+init_pru_time(struct pru_time *pru_time,
+        u32 mult, u32 shift, u32 bits,
+        cycle_t (*read_cc)(const struct cyclecounter *cc),
+        int (*slew_cc)(s64 delta)
+        )
+{
+    memset(pru_time, 0, sizeof(struct pru_time));
+
+    pru_time->cc.read = read_cc;
+    pru_time->cc.mask = CLOCKSOURCE_MASK(bits);
+    pru_time->cc.mult = mult;
+    pru_time->cc.shift = shift;
+
+    pru_time->slew_cc = slew_cc;
+
+    timecounter_init(&pru_time->tc, &pru_time->cc, IEP_CNT);
+
+    return 0;
+}
+
+/**
+ * Read the current pru_time and handle clock counter rollover.
+ * You should call this periodically to maintain proper time.
+ *
+ * Return absolute time in nanoseconds
+ */
+u64
+read_pru_time(struct pru_time *pru_time)
+{
+    return timecounter_read(&pru_time->tc);
+}
+
+/**
+ * Adjust PRU time to align with host timestamp.
+ *
+ * Params:
+ * ts_pru - nanosecond timestamp of pru
+ * ts_host - nanosecond timestamp of host
+ * Returns the signed offset in nanoseconds between pru and host
+ */
+s64
+adj_pru_time(struct pru_time *pru_time, u64 ts_pru, u64 ts_host)
+{
+    s64 delta = 0;
+    if (ts_host > ts_pru) {
+        delta = ts_host - ts_pru;
+    } else if (ts_host < ts_pru) {
+        delta = ts_pru - ts_host;
+        delta = -delta;
+    }
+
+    // slew_cc allows users to define a custom callback to slew the
+    // source clock counter according to their own algorithm.
+    // This can be useful in preventing time from going backward.
+    // If slew_cc is not set or returns 0 then just jump the clock.
+    if (pru_time->slew_cc == NULL
+            || (pru_time->slew_cc != NULL && !pru_time->slew_cc(delta))) {
+        timecounter_adjtime(&pru_time->tc, delta);
+    }
+
+    return delta;
 }
 
 #endif
