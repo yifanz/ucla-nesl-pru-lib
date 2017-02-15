@@ -1,9 +1,11 @@
-Make sure you have loaded the necessary DT overlays. See the README in `overlays/`.
+Make sure you have loaded the necessary DT [overlays](https://github.com/yifanz/ucla-nesl-pru-lib/tree/master/overlay).
 Run `./config-pins`.
-Then connect P9\_27 to P8\_10 on the beaglebone.
-Now you are ready to run the example.
+Then connect P9\_27 to P8\_10 on the beaglebone (see image below).
+
+![alt text](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/time_sync/time_sync_setup.jpg)
 
 Here is roughly what happens during synchronization:
+
 1. The PRU will send a pulse on P9\_27 and record the its own time (T1).
 2. This will trigger the input capture configured on P8\_10 to record the time the pulse was received (T2).
 3. The user-space program reads T2 from "/dev/ptp\*" and sends it to the PRU.
