@@ -17,7 +17,11 @@
 
 volatile register unsigned int __R31, __R30;
 
+#if PRU_NUM == 0
 static uint32_t *CTRL_REG = (uint32_t*) 0x22000;
+#else
+static uint32_t *CTRL_REG = (uint32_t*) 0x24000;
+#endif
 
 #define HWREG(addr) (*((volatile uint32_t *)(addr)))
 
