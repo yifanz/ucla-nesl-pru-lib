@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-int init_qot(char* dev, int channel);
+int init_qot(char* dev);
 int deinit_qot();
 uint64_t qot_read_event_ts(int* err, int* channel);
 

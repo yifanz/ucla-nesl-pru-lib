@@ -43,6 +43,10 @@ volatile uint8_t *shared_mem;
 struct rbuffer *send_to_pru_rbuffer;
 struct rbuffer *receive_from_pru_rbuffer;
 
+volatile int ts_ready = 0;
+volatile uint64_t last_pru_ts = 0;
+volatile uint64_t last_host_ts = 0;
+
 // Handles interrupts from the PRU
 void *receive_pru_thread(void *value)
 {
@@ -57,7 +61,13 @@ void *receive_pru_thread(void *value)
         while(!status) {
             data = rbuf_read_uint64(receive_from_pru_rbuffer, &status);
             if (!status) {
-                printf("PRU: %lld ns\n", data);
+                last_pru_ts = data;
+                ts_ready |= 0x1;
+                if (ts_ready == 0x3) {
+                    ts_ready = 0;
+                    printf("%lld, %lld\n",
+                            last_host_ts, last_pru_ts);
+                }
             }
         }
     }
@@ -68,12 +78,28 @@ void *send_pru_thread(void *value)
 {
     int err = 0;
     uint64_t nano_ts;
+    int i = 1;
 
     while (!stop) {
         // This call will block until a QoT input capture event is triggered
         int channel;
         nano_ts = qot_read_event_ts(&err, &channel);
-        rbuf_write_uint64(send_to_pru_rbuffer, nano_ts);
+        if (channel == 0) {
+            //printf("SYNC: %llu ns, channel %d\n",
+            //        nano_ts, channel);
+            rbuf_write_uint64(send_to_pru_rbuffer, nano_ts);
+        } else if (channel == 1) {
+            // Skip the falling edge timestamp
+            if (i++ % 2) {
+                last_host_ts = nano_ts;
+                ts_ready |= 0x2;
+                if (ts_ready == 0x3) {
+                    ts_ready = 0;
+                    printf("%lld, %lld\n",
+                            last_host_ts, last_pru_ts);
+                }
+            }
+        }
     }
 }
 
@@ -135,7 +161,7 @@ int main (void)
     init_rbuffer(send_to_pru_rbuffer);
 
     // Setup QoT
-    if (init_qot("/dev/ptp1", 0)) {
+    if (init_qot("/dev/ptp1")) {
         printf("Initialize QoT time sync failed\n");
         exit(EXIT_FAILURE);
     }

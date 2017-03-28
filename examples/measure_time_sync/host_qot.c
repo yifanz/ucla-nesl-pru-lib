@@ -69,12 +69,11 @@ struct ptp_extts_event event;   /* PTP event */
  * channel - Channel index, '1' corresponds to 'TIMER6'
  */
 int
-init_qot(char* dev, int channel)
+init_qot(char* dev)
 {
     struct ptp_extts_request extts_request;     /* External timestamp req */
 
     device_m = dev;                             /* PTP device */
-    index_m = channel;                          /* Channel index */
 
     /* Open the character device */
     fd_m = open(device_m, O_RDWR);
@@ -83,27 +82,47 @@ init_qot(char* dev, int channel)
                 device_m, strerror(errno));
         return -1;
     }
-    printf("Device opened %d\n", fd_m);
+    //printf("Device opened %d\n", fd_m);
 
     memset(&desc, 0, sizeof(desc));
-    desc.index = index_m;
+    desc.index = 0;
     desc.func = 1;              // '1' corresponds to external timestamp
-    desc.chan = index_m;
+    desc.chan = 0;
     if (ioctl(fd_m, PTP_PIN_SETFUNC, &desc)) {
         printf("Set pin func failed for %d\n", fd_m);
         return -1;
     }
-    printf("Set pin func successful for %d\n", fd_m);
+    //printf("Set pin func successful for %d\n", fd_m);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.index = 1;
+    desc.func = 1;              // '1' corresponds to external timestamp
+    desc.chan = 1;
+    if (ioctl(fd_m, PTP_PIN_SETFUNC, &desc)) {
+        printf("Set pin func failed for %d\n", fd_m);
+        return -1;
+    }
+    //printf("Set pin func successful for %d\n", fd_m);
 
     // Setup to request timestamps from the pin
     memset(&extts_request, 0, sizeof(extts_request));
-    extts_request.index = index_m;
+    extts_request.index = 0;
     extts_request.flags = PTP_ENABLE_FEATURE;
     if (ioctl(fd_m, PTP_EXTTS_REQUEST, &extts_request)) {
         printf("Requesting timestamps failed for %d\n", fd_m);
         return -1;
     }
-    printf("Requesting timestamps success for %d\n", fd_m);
+    //printf("Requesting timestamps success for %d\n", fd_m);
+
+    memset(&extts_request, 0, sizeof(extts_request));
+    extts_request.index = 1;
+    extts_request.flags = PTP_ENABLE_FEATURE;
+    if (ioctl(fd_m, PTP_EXTTS_REQUEST, &extts_request)) {
+        printf("Requesting timestamps failed for %d\n", fd_m);
+        return -1;
+    }
+    //printf("Requesting timestamps success for %d\n", fd_m);
+
 
     return 0;
 }
@@ -115,14 +134,23 @@ deinit_qot()
 
     /* Disable the pin */
     memset(&desc, 0, sizeof(desc));
-    desc.index = index_m;
+    desc.index = 0;
     desc.func = 0;              // '0' corresponds to no function
-    desc.chan = index_m;
+    desc.chan = 0;
     if (ioctl(fd_m, PTP_PIN_SETFUNC, &desc)) {
         printf("Disable pin func failed for %d\n", fd_m);
         ret = -1;
     }
 
+    /* Disable the pin */
+    memset(&desc, 0, sizeof(desc));
+    desc.index = 1;
+    desc.func = 0;              // '0' corresponds to no function
+    desc.chan = 1;
+    if (ioctl(fd_m, PTP_PIN_SETFUNC, &desc)) {
+        printf("Disable pin func failed for %d\n", fd_m);
+        ret = -1;
+    }
     /* Close the character device */
     close(fd_m);
 
@@ -161,8 +189,8 @@ qot_read_event_ts(int* err, int* channel)
     // printf("Sync Time - %lld.%09u - %llu ns\n",
     //          event.t.sec, event.t.nsec, nano_ts);
 
-    printf("QoT event time: %llu ns, channel %d\n",
-            nano_ts, *channel);
+    //printf("QoT event time: %llu ns, channel %d\n",
+    //        nano_ts, *channel);
 
     return nano_ts;
 }

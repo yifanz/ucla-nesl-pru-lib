@@ -18,8 +18,6 @@ PRU_SRC="pru_main.c"
 HOST_SRC="host_main.c host_qot.c"
 PRU_TARGET=pru.out
 HOST_TARGET=host
-HOST_REPORT_SRC="host_report_main.c host_qot.c"
-HOST_REPORT_TARGET=report
 GEN=gen
 SCRIPT_DIR=${0%/*}
 
@@ -65,7 +63,6 @@ popd
 
 echo "Compiling and linking the host application"
 gcc -I../../include -DPRU_NUM=$PRU_NUM $HOST_SRC -o $GEN/$HOST_TARGET -lpthread -lprussdrv
-gcc -I../../include -DPRU_NUM=$PRU_NUM $HOST_REPORT_SRC -o $GEN/$HOST_REPORT_TARGET
 
 if [ $? -ne 0 ]; then
     echo "Compiling and linking the host application FAILED"
