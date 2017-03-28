@@ -6,22 +6,25 @@
 * __P8_9__: QoT input capture for time sync.
 * __P8_10__: QoT input capture for reporting timestamp.
 
-PRU initiates time sync by asserting P8_46 and records its own timestamp at that instant (T1).
-Since P8_46 is connected to P8_9, this will produce an input capture timestamp (T2) on the main processor.
-T2 is delivered to the PRU by a user-space program and the PRU will subtract T1 and T2 to calculate the offset and adjust its own clock.
+__P8_46__ is connected to __P8_9__ and this connection is used for time synchronization between the PRU and main processor. 
+Asserting __P8_45__ causes the PRU to report its current timestamp. Similarily asserting __P8_10__, reports the current timestamp from the main processor.
+__P8_45__ and __P8_10__ are connected to a PWM output from an external microcontroller which will periodically assert both pins simultaneously to produce timestamps for comparing the synchronization accuracy.
 
-Asserting P8_45 causes the PRU to report its current timestamp. Similarily asserting P8_10, reports the current timestamp from the main processor.
+The PRU initiates time synchronization by asserting __P8_46__ and records its own timestamp at that instant (__T1__).
+Since __P8_46__ is connected to __P8_9__, this will produce an input capture timestamp (__T2__) on the main processor.
+__T2__ is delivered to the PRU by a user-space program and the PRU will subtract __T1__ and __T2__ to calculate the offset and adjust its own clock.
 
 #### Results
 
-8 test runs were performed each lasting approximately 8 minutes.
-For each run, time synchronization between the PRU and the main procesor occurs every n seconds.
-We tested different periods of time synchronization where n is from 1 second to 32 seconds.
-However, in sync-once.csv, we only synchronize once at the beginning.
-Once the PRU and main processor are synchronized, we periodically assert P8_45 and P8_10 
+8 test runs were performed, each lasting approximately 8 minutes.
+For each run, time synchronization between the PRU and the main procesor occurs every *n* seconds.
+We tested different periods of time synchronization by setting *n* from 1 second to 32 seconds.
+However, in sync-once.csv, we only allow synchronization to occur once at the beginning.
+Once the PRU and main processor are synchronized, we assert __P8_45__ and __P8_10__ 
 every 500 milliseconds and record the timestamps from the PRU and main processor.
 We use the difference between the reported timestamps as a measure for the accuracy of synchronization.
-In the csv files, the left column is the QoT timestamp and the right column is the PRU timestamp.
+
+The csv files contain the timestamps from each run. The __left column is the QoT timestamp__ and the __right column is the PRU timestamp__.
 All values are in nanoseconds. 
 
 * [sync-1-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-1-sec.csv) (mean: 4973.59 ns stdev: 1125.55 ns)
