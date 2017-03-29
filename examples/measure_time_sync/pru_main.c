@@ -130,8 +130,8 @@ int main()
     u64 last_ts = 0;
     while(g_counter > 0) {
         u64 ts = read_pru_time(&time);
-        // Do synchronization every ~5 seconds
-        if (/*((ts - last_ts) > SYNC_PERIOD_NS) ||*/ first) {
+        // Do synchronization every SYNC_PERIOD_NS
+        if (((ts - last_ts) > SYNC_PERIOD_NS) || first) {
             first = 0;
             //g_counter--;
             last_ts = ts;
