@@ -22,6 +22,7 @@ cd ucla-nesl-pru-lib/overlay
 
 # Build the pru_clock example
 cd ../examples/pru_clock
+./config-pins.sh
 ./build.sh
 
 # Run the pru_clock

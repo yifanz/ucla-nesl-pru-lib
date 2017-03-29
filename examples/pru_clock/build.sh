@@ -13,7 +13,7 @@
 #
 
 PRU_NUM=1; # which PRU 0 or 1
-#PRU_SDK=/root/pru_2.0.0B2
+PRU_SDK=/usr/share/ti/cgt-pru
 PRU_SRC="pru_main.c"
 HOST_SRC="host_main.c host_qot.c"
 PRU_TARGET=pru.out
@@ -29,12 +29,12 @@ clpru --silicon_version=3 --keep_asm --c_src_interlist \
     --asm_directory=$GEN --obj_directory=$GEN --temp_directory=$GEN \
     -DPRU_NUM=$PRU_NUM \
     $PRU_SRC \
+    -i$PRU_SDK/include \
+    -i$PRU_SDK/lib \
     -i../../include \
     -z AM3359_PRU.cmd \
     -o $GEN/$PRU_TARGET \
     -m $GEN/$PRU_TARGET.map
-#-i$PRU_SDK/include
-#-i$PRU_SDK/lib
 
 if [ $? -ne 0 ]; then
     echo "Compile and link FAILED"
