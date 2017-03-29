@@ -31,6 +31,14 @@ read_cc(const struct cyclecounter *cc)
     return IEP_CNT;
 }
 
+/*
+ * Measure the latency for read_pru_time() and adj_pru_time().
+ *
+ * PRU is 200 MHz -> 1 cycle is 5 ns
+ *
+ * read_pru_time = 720 cycles = 3600 ns
+ * adj_pru_time = 109 cycles = 545 ns
+ */
 int main()
 {
     uint32_t *shared_mem = (void*) (unsigned long) 0x10000;
