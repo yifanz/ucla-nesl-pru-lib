@@ -15,7 +15,7 @@
 PRU_NUM=1; # which PRU 0 or 1
 #PRU_SDK=/root/pru_2.0.0B2
 PRU_SRC="pru_main.c"
-HOST_SRC="host_main.c host_qot.c"
+HOST_SRC="host_main.c"
 PRU_TARGET=pru.out
 HOST_TARGET=host
 GEN=gen
@@ -63,7 +63,6 @@ popd
 
 echo "Compiling and linking the host application"
 gcc -I../../include -DPRU_NUM=$PRU_NUM $HOST_SRC -o $GEN/$HOST_TARGET -lpthread -lprussdrv
-gcc -I../../include host_report_main.c host_qot.c -o $GEN/report -lpthread
 
 if [ $? -ne 0 ]; then
     echo "Compiling and linking the host application FAILED"

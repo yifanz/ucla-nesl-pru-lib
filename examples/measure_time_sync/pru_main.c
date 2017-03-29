@@ -21,7 +21,7 @@
 #include "shared_conf.h"
 
 #define SHARED_MEM_BASE 0x10000
-#define SYNC_PERIOD_NS 32000000000
+#define SYNC_PERIOD_NS 8000000000
 
 void
 terminate()
@@ -67,7 +67,7 @@ slew_cc(s64 delta)
     }
 }
 
-int g_counter = 1010;
+int g_counter = 8000;
 int input_high = 0;
 
 void check_input_pin(struct pru_time *time, struct rbuffer *send_buf)
