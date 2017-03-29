@@ -1,5 +1,11 @@
 ### PRU Clock
 
+#### Pins
+* __P8_46__: PRU output for time sync.
+* __P8_9__: QoT input capture for time sync.
+
+__P8_46__ should be connected to __P8_9__ and this connection is used for time synchronization between the PRU and main processor.
+
 ```
 # Login as the root user
 ssh root@<beaglebone IP>
