@@ -34,5 +34,6 @@ All values are in nanoseconds.
 * [sync-16-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-16-sec.csv) (mean: 4945.89 ns stdev: 1718.47 ns)
 * [sync-32-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-32-sec.csv) (mean: 5071.01 ns stdev: 1110.71 ns)
 * [sync-once.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-once.csv) (mean: 5032.47 ns stdev: 1023.99 ns)
+* [sync-8-sec_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-8-sec_sample-250-ms.csv) (mean: 5124.94 ns stdev: 1102.74 ns)
 
-In all cases, it appears that the PRU is always ~5 microseconds late.
+In all cases, it appears that the PRU is always ~5 microseconds late. It is likely due to this [reason](https://github.com/yifanz/ucla-nesl-pru-lib/tree/master/examples/read_time_latency).
