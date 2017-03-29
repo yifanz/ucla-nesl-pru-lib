@@ -62,6 +62,7 @@ int main()
         //u64 ts_pru = 0;
         u64 ts_pru = read_pru_time(&time);
         //s64 delta = adj_pru_time(&time, ts_pru, ts_pru + 100);
+        //uint32_t iep_cnt = IEP_CNT;
         *shared_mem = TICKS;
         shared_mem++;
     }
