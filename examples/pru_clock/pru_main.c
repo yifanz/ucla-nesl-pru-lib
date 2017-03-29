@@ -21,7 +21,6 @@
 #include "shared_conf.h"
 
 #define SHARED_MEM_BASE 0x10000
-#define SYNC_PERIOD_NS 32000000000
 
 void
 terminate()
@@ -67,36 +66,16 @@ slew_cc(s64 delta)
     }
 }
 
-int g_counter = 1010;
-int input_high = 0;
-
-void check_input_pin(struct pru_time *time, struct rbuffer *send_buf)
-{
-    if (!input_high) {
-        if (read_pin(P8_45)) {
-            input_high = 1;
-            // Send current pru time back to host for printing
-            rbuf_write_uint64(send_buf, read_pru_time(time));
-            // Interrupt the host: there is a message in the rbuffer
-            TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
-            g_counter--;
-        }
-    } else {
-        if (!read_pin(P8_45)) {
-            input_high = 0;
-        }
-    }
-}
-
+/*
+ * This program runs on PRU1 and periodically performs time synchronization between the host and PRU.
+ * It will continuously write the current 64 bit timestamp value (nanoseconds) to a shared memory location (SHARED_MEM_BASE + TS_ADDR).
+ */
 int main()
 {
+    uint64_t *ts_mem = (void*) (unsigned long) (SHARED_MEM_BASE + TS_ADDR);
+
     // Wait enough time for host to startup
     WAIT_MS(1000);
-
-    // Send PRU time back to host for printing
-    struct rbuffer *send_buf =
-        (struct rbuffer *) (uint32_t) (SHARED_MEM_BASE + RBUF_ADDR);
-    init_rbuffer(send_buf);
 
     // Required for getting host timestamp
     struct rbuffer *rec_buf =
@@ -117,49 +96,36 @@ int main()
 
     short status = -1;
     uint64_t data = 0;
-    int first = 1;
 
-    u64 last_ts = 0;
-    while(g_counter > 0) {
-        u64 ts = read_pru_time(&time);
-        // Do synchronization every SYNC_PERIOD_NS
-        if (((ts - last_ts) > SYNC_PERIOD_NS) || first) {
-            first = 0;
-            //g_counter--;
-            last_ts = ts;
+    int i = 30;
+    while(i--) {
+        if (i % 5 == 0) {
             // Time synchronization started
             u64 ts_pru = read_pru_time(&time);
 
-#if PRU_NUM == 0
-            // Send a pulse on P9_27
-            assert_pin(P9_27);
-            WAIT_US(10);
-            deassert_pin(P9_27);
-#else
-            // Send a pulse on P9_27
             assert_pin(P8_46);
+            WAIT_US(10);
             deassert_pin(P8_46);
-#endif
 
             // Get the time when the host received the pulse
             uint64_t ts_host = 0;
             do {
                 data = rbuf_read_uint64(rec_buf, &status);
-                check_input_pin(&time, send_buf);
             } while(status);
             ts_host = data;
 
             // Calculate the offset between host and pru
             s64 delta = adj_pru_time(&time, ts_pru, ts_host);
-
-            // Debugging. If you want to print the ts_pru and delta.
-            //rbuf_write_uint64(send_buf, ts_pru);
-            //rbuf_write_uint64(send_buf, delta);
         }
 
-        check_input_pin(&time, send_buf);
+        // Write timestamp to shared memory location
+        *ts_mem = read_pru_time(&time);
 
-        //WAIT_MS(1000);
+        // Interrupt the host: there is a message in the rbuffer
+        TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
+
+        // Pause for a second. Don't want to flood the host with messages.
+        WAIT_MS(1000);
     }
 
     DISABLE_IEP_TMR();
