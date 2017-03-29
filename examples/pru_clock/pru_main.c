@@ -20,7 +20,7 @@
 
 #include "shared_conf.h"
 
-#define SHARED_MEM_BASE 0x10000
+#define SYNC_PERIOD_NS 5000000000
 
 void
 terminate()
@@ -75,7 +75,7 @@ int main()
     uint64_t *ts_mem = (void*) (unsigned long) (SHARED_MEM_BASE + TS_ADDR);
 
     // Wait enough time for host to startup
-    WAIT_MS(1000);
+    WAIT_MS(100);
 
     // Required for getting host timestamp
     struct rbuffer *rec_buf =
@@ -97,20 +97,25 @@ int main()
     short status = -1;
     uint64_t data = 0;
 
-    int i = 30;
-    while(i--) {
-        if (i % 5 == 0) {
+    u64 last_ts = 0;
+    int first = 1;
+    while(1) {
+        u64 ts = read_pru_time(&time);
+        if (((ts - last_ts) > SYNC_PERIOD_NS) || first) {
+            first = 0;
+            last_ts = ts;
+
             // Time synchronization started
             u64 ts_pru = read_pru_time(&time);
 
             assert_pin(P8_46);
-            WAIT_US(10);
             deassert_pin(P8_46);
 
             // Get the time when the host received the pulse
             uint64_t ts_host = 0;
             do {
                 data = rbuf_read_uint64(rec_buf, &status);
+                *ts_mem = read_pru_time(&time);
             } while(status);
             ts_host = data;
 
@@ -120,16 +125,12 @@ int main()
 
         // Write timestamp to shared memory location
         *ts_mem = read_pru_time(&time);
-
-        // Interrupt the host: there is a message in the rbuffer
-        TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
-
-        // Pause for a second. Don't want to flood the host with messages.
-        WAIT_MS(1000);
     }
 
+    /* this program never terminates
     DISABLE_IEP_TMR();
 
     // Exiting the application
     terminate();
+    */
 }

@@ -160,7 +160,7 @@ qot_read_event_ts(int* err)
     // printf("Sync Time - %lld.%09u - %llu ns\n",
     //          event.t.sec, event.t.nsec, nano_ts);
 
-    printf("QoT event time: %llu ns\n", nano_ts);
+    //printf("QoT event time: %llu ns\n", nano_ts);
 
     return nano_ts;
 }

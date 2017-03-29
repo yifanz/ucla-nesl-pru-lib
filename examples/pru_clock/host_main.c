@@ -42,16 +42,14 @@ volatile uint8_t *shared_mem;
 
 struct rbuffer *send_to_pru_rbuffer;
 
-// Handles interrupts from the PRU
-void *receive_pru_thread(void *value)
+void *poll_time_thread(void *value)
 {
     while(!stop) {
         uint64_t data;
 
-        // This call will block until PRU interrupts the host
-        prussdrv_pru_wait_event(PRU_EVTOUT_0);
-        prussdrv_pru_clear_event(PRU_EVTOUT_0, PRU0_ARM_INTERRUPT);
+        sleep(1);
 
+        // Poll shared memory location for PRU timestamp
         data = *((uint64_t*) (shared_mem + TS_ADDR));
         printf("PRU: %lld ns\n", data);
     }
@@ -134,7 +132,7 @@ int main (void)
     prussdrv_exec_program (PRU_NUM, "./text.bin");
 
     /* Thread for handling message from the PRU */
-    if (pthread_create(&thread, NULL, &receive_pru_thread, NULL)){
+    if (pthread_create(&thread, NULL, &poll_time_thread, NULL)){
         printf("Failed to create thread!\n");
         exit(EXIT_FAILURE);
     }
