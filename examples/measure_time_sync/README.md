@@ -16,12 +16,10 @@ __T2__ is delivered to the PRU by a user-space program and the PRU will subtract
 
 #### Results
 
-8 test runs were performed, each lasting approximately 8 minutes.
-For each run, time synchronization between the PRU and the main procesor occurs every *n* seconds.
-We tested different periods of time synchronization by setting *n* from 1 second to 32 seconds.
-However, in sync-once.csv, we only allow synchronization to occur once at the beginning.
+Test run lasts approximately 33 minutes.
+For each run, time synchronization between the PRU and the main procesor occurs every 8 seconds.
 Once the PRU and main processor are synchronized, we assert __P8_45__ and __P8_10__ 
-every 500 milliseconds and record the timestamps from the PRU and main processor.
+every 250 milliseconds and record the timestamps from the PRU and main processor.
 We use the difference between the reported timestamps as a measure for the accuracy of synchronization.
 
 The csv files contain the timestamps from each run. The __left column is the QoT timestamp__, the __middle column is the PRU timestamp__ the __right column is the time difference__.
