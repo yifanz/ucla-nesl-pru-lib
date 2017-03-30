@@ -24,16 +24,7 @@ Once the PRU and main processor are synchronized, we assert __P8_45__ and __P8_1
 every 500 milliseconds and record the timestamps from the PRU and main processor.
 We use the difference between the reported timestamps as a measure for the accuracy of synchronization.
 
-The csv files contain the timestamps from each run. The __left column is the QoT timestamp__ and the __right column is the PRU timestamp__.
+The csv files contain the timestamps from each run. The __left column is the QoT timestamp__, the __middle column is the PRU timestamp__ the __right column is the time difference__.
 All values are in nanoseconds. 
 
-* [sync-1-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-1-sec.csv) (mean: 4973.59 ns stdev: 1125.55 ns)
-* [sync-2-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-2-sec.csv) (mean: 5052.19 ns stdev: 1115.58 ns)
-* [sync-4-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-4-sec.csv) (mean: 5077.75 ns stdev: 1037.35 ns)
-* [sync-8-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-8-sec.csv) (mean: 5198.96 ns stdev: 1227.92 ns)
-* [sync-16-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-16-sec.csv) (mean: 4945.89 ns stdev: 1718.47 ns)
-* [sync-32-sec.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-32-sec.csv) (mean: 5071.01 ns stdev: 1110.71 ns)
-* [sync-once.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-once.csv) (mean: 5032.47 ns stdev: 1023.99 ns)
-* [sync-8-sec_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-8-sec_sample-250-ms.csv) (mean: 5124.94 ns stdev: 1102.74 ns)
-
-In all cases, it appears that the PRU is always ~5 microseconds late. It is likely due to this [reason](https://github.com/yifanz/ucla-nesl-pru-lib/tree/master/examples/read_time_latency).
+* [sync-8-sec_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-8-sec_sample-250-ms.csv) (mean: 129.65 ns stdev: 233.58 ns)
