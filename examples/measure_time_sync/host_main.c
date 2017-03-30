@@ -37,6 +37,8 @@
 #include "nesl_pru_rbuffer.h"
 #include "host_qot.h"
 
+#define DEBUG
+
 volatile int stop = 0;
 volatile uint8_t *shared_mem;
 
@@ -65,11 +67,14 @@ void *receive_pru_thread(void *value)
                 ts_ready |= 0x1;
                 if (ts_ready == 0x3) {
                     ts_ready = 0;
-                    //printf("%lld, %lld\n",
-                    //        last_host_ts, last_pru_ts);
+#ifdef DEBUG
                     printf("%lld, %lld, %lld\n",
                             last_host_ts, last_pru_ts,
                             last_pru_ts - last_host_ts);
+#else
+                    printf("%lld, %lld\n",
+                            last_host_ts, last_pru_ts);
+#endif
                 }
             }
         }
@@ -98,11 +103,14 @@ void *send_pru_thread(void *value)
                 ts_ready |= 0x2;
                 if (ts_ready == 0x3) {
                     ts_ready = 0;
-                    //printf("%lld, %lld\n",
-                    //        last_host_ts, last_pru_ts);
+#ifdef DEBUG
                     printf("%lld, %lld, %lld\n",
                             last_host_ts, last_pru_ts,
                             last_pru_ts - last_host_ts);
+#else
+                    printf("%lld, %lld\n",
+                            last_host_ts, last_pru_ts);
+#endif
                 }
             }
         }

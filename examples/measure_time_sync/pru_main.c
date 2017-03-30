@@ -20,7 +20,7 @@
 #include "shared_conf.h"
 
 #define SHARED_MEM_BASE 0x10000
-#define SYNC_PERIOD_NS 5000000000
+#define SYNC_PERIOD_NS 8000000000
 
 void
 terminate()
