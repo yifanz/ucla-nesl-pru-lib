@@ -12,7 +12,6 @@
 #include "nesl_pru_iep.h"
 #include "nesl_pru_wait.h"
 #include "nesl_pru_rbuffer.h"
-#include "nesl_pru_time.h"
 #include "nesl_pru_ticks.h"
 #include "nesl_pru_gpio.h"
 #include <stdint.h>
@@ -21,7 +20,7 @@
 #include "shared_conf.h"
 
 #define SHARED_MEM_BASE 0x10000
-#define SYNC_PERIOD_NS 8000000000
+#define SYNC_PERIOD_NS 5000000000
 
 void
 terminate()
@@ -30,53 +29,16 @@ terminate()
     __halt(); // halt the PRU
 }
 
-cycle_t
-read_cc(const struct cyclecounter *cc)
-{
-    return IEP_CNT;
-}
-
-/*
- * Custom function that lets you slew the IEP counter.
- * This is just for demo purposes. You should define your own algorithm.
- */
-int
-slew_cc(s64 delta)
-{
-    uint8_t comp_cycles = 0;
-    uint8_t comp_inc = 0;
-    uint64_t abs_delta = llabs(delta);
-
-    if (abs_delta < 100) {
-        if (delta < 0) {
-            // PRU clock was too fast
-            comp_cycles = abs_delta / 5;
-            comp_inc = 0;
-        } else {
-            // PRU clock was too slow
-            comp_cycles = 1;
-            comp_inc = abs_delta / 5;
-        }
-
-        SET_IEP_COMP_INC(comp_inc);
-        IEP_COMPEN = comp_cycles;
-
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 int g_counter = 8000;
 int input_high = 0;
 
-void check_input_pin(struct pru_time *time, struct rbuffer *send_buf)
+void check_input_pin(struct iep_time *time, struct rbuffer *send_buf)
 {
     if (!input_high) {
         if (read_pin(P8_45)) {
             input_high = 1;
             // Send current pru time back to host for printing
-            rbuf_write_uint64(send_buf, read_pru_time(time));
+            rbuf_write_uint64(send_buf, iep_get_time(time));
             // Interrupt the host: there is a message in the rbuffer
             TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
             g_counter--;
@@ -104,56 +66,45 @@ int main()
                 + sizeof(struct rbuffer));
 
     // IEP is our clock source
-    DISABLE_IEP_TMR();
-    ENABLE_IEP_TMR();
-    IEP_CNT = 0;
-
-    struct pru_time time;
-
-    // Initialize pru_time with IEP as the source
-    // slew_cc is optional
-    //init_pru_time(&time, 5, 0, 32, read_cc, slew_cc);
-    init_pru_time(&time, 5, 0, 32, read_cc, NULL);
+    struct iep_time time;
+    init_iep_time(&time);
 
     short status = -1;
-    uint64_t data = 0;
     int first = 1;
+    uint64_t last_ts = 0;
+    uint64_t ts = 0;
+    uint64_t host_ts = 0;
 
-    u64 last_ts = 0;
     while(g_counter > 0) {
-        u64 ts = read_pru_time(&time);
+        ts = iep_get_time(&time);
         // Do synchronization every SYNC_PERIOD_NS
         if (((ts - last_ts) > SYNC_PERIOD_NS) || first) {
             first = 0;
-            //g_counter--;
-            last_ts = ts;
-            // Time synchronization started
-            u64 ts_pru = read_pru_time(&time);
 
 #if PRU_NUM == 0
             // Send a pulse on P9_27
             assert_pin(P9_27);
-            WAIT_US(10);
             deassert_pin(P9_27);
 #else
-            // Send a pulse on P9_27
+            // Send a pulse on P8_46
             assert_pin(P8_46);
             deassert_pin(P8_46);
 #endif
+            // time of sync event
+            ts = iep_get_time(&time);
 
             // Get the time when the host received the pulse
-            uint64_t ts_host = 0;
             do {
-                data = rbuf_read_uint64(rec_buf, &status);
+                host_ts = rbuf_read_uint64(rec_buf, &status);
                 check_input_pin(&time, send_buf);
             } while(status);
-            ts_host = data;
 
             // Calculate the offset between host and pru
-            s64 delta = adj_pru_time(&time, ts_pru, ts_host);
+            iep_adj_time(&time, ts, host_ts);
 
-            // Debugging. If you want to print the ts_pru and delta.
-            //rbuf_write_uint64(send_buf, ts_pru);
+            last_ts = iep_get_time(&time);
+            // Debugging. If you want to print the ts and delta.
+            //rbuf_write_uint64(send_buf, ts);
             //rbuf_write_uint64(send_buf, delta);
         }
 
