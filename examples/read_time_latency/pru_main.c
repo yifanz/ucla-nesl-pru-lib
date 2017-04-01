@@ -12,7 +12,6 @@
 #include "nesl_pru_iep.h"
 #include "nesl_pru_wait.h"
 #include "nesl_pru_rbuffer.h"
-#include "nesl_pru_time.h"
 #include "nesl_pru_ticks.h"
 #include "nesl_pru_gpio.h"
 #include <stdint.h>
@@ -25,19 +24,14 @@ terminate()
     __halt(); // halt the PRU
 }
 
-cycle_t
-read_cc(const struct cyclecounter *cc)
-{
-    return IEP_CNT;
-}
-
 /*
  * Measure the latency for read_pru_time() and adj_pru_time().
  *
  * PRU is 200 MHz -> 1 cycle is 5 ns
  *
- * read_pru_time = 720 cycles = 3600 ns
- * adj_pru_time = 109 cycles = 545 ns
+ * ie_get_time = 124 cycles = 620 ns
+ * adj_pru_time = 58 cycles = 290 ns
+ * read IEP counter = 23 cycles = 115 ns
  */
 int main()
 {
@@ -50,18 +44,17 @@ int main()
     ENABLE_IEP_TMR();
     IEP_CNT = 0;
 
-    struct pru_time time;
+    uint64_t ts = 0;
+    uint64_t host_ts = 0;
 
-    // Initialize pru_time with IEP as the source
-    // slew_cc is optional
-    init_pru_time(&time, 5, 0, 32, read_cc, NULL);
+    struct iep_time time;
+    init_iep_time(&time);
 
     unsigned int i = 1000;
     while(i--) {
         TICKS = 0;
-        //u64 ts_pru = 0;
-        u64 ts_pru = read_pru_time(&time);
-        //s64 delta = adj_pru_time(&time, ts_pru, ts_pru + 100);
+        uint64_t ts_pru = iep_get_time(&time);
+        //iep_adj_time(&time, ts, host_ts);
         //uint32_t iep_cnt = IEP_CNT;
         *shared_mem = TICKS;
         shared_mem++;
