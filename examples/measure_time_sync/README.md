@@ -17,7 +17,7 @@ __T2__ is delivered to the PRU by a user-space program and the PRU will subtract
 #### Results
 
 Test run lasts approximately 33 minutes.
-For each run, time synchronization between the PRU and the main procesor occurs every 8 or 32 seconds.
+For each run, time synchronization between the PRU and the main procesor occurs every 8 or 32 seconds or just once at the beginning. 
 Once the PRU and main processor are synchronized, we assert __P8_45__ and __P8_10__ 
 every 250 milliseconds and record the timestamps from the PRU and main processor.
 We use the difference between the reported timestamps as a measure for the accuracy of synchronization.
@@ -25,6 +25,6 @@ We use the difference between the reported timestamps as a measure for the accur
 The csv files contain the timestamps from each run. The __left column is the QoT timestamp__, the __middle column is the PRU timestamp__ the __right column is the time difference__.
 All values are in nanoseconds. 
 
-* [sync-8-sec_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-8-sec_sample-250-ms.csv) (mean: 129.65 ns stdev: 233.58 ns)
-* [sync-32-sec_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-32-sec_sample-250-ms.csv) (mean: 120.42 ns stdev: 232.94 ns)
-* [sync-once_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-once_sample-250-ms.csv)
+* [sync-8-sec_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-8-sec_sample-250-ms.csv) (sync every 8 sec, test every 250 ms)
+* [sync-32-sec_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-32-sec_sample-250-ms.csv) (sync every 32 sec, test every 250 ms)
+* [sync-once_sample-250-ms.csv](https://github.com/yifanz/ucla-nesl-pru-lib/blob/master/examples/measure_time_sync/sync-once_sample-250-ms.csv) (sync only once at beginning then test every 250 ms)
