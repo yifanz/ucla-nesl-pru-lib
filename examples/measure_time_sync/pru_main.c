@@ -29,7 +29,7 @@ terminate()
     __halt(); // halt the PRU
 }
 
-int g_counter = 8000;
+int num_samples = 8000;
 int input_high = 0;
 
 void check_input_pin(struct iep_time *time, struct rbuffer *send_buf)
@@ -41,7 +41,7 @@ void check_input_pin(struct iep_time *time, struct rbuffer *send_buf)
             rbuf_write_uint64(send_buf, iep_get_time(time));
             // Interrupt the host: there is a message in the rbuffer
             TRIG_INTC(3); // Trigger interrupt PRUEVENT_0
-            g_counter--;
+            num_samples--;
         }
     } else {
         if (!read_pin(P8_45)) {
@@ -75,7 +75,7 @@ int main()
     uint64_t ts = 0;
     uint64_t host_ts = 0;
 
-    while(g_counter > 0) {
+    while(num_samples > 0) {
         ts = iep_get_time(&time);
         // Do synchronization every SYNC_PERIOD_NS
         if (((ts - last_ts) > SYNC_PERIOD_NS) || first) {
